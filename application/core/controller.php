@@ -1,17 +1,13 @@
 <?php
 
-class Controller {
+class Controller 
+{
 	
 	function __construct()
 	{
-		
+		$this->model = new Model();
 	}
-	
 
-	function action()
-	{
-		
-	}
 }
 
 ?>

@@ -9,62 +9,97 @@ class Route
 		$method = $_SERVER['REQUEST_METHOD'];
 
 		//Request GET
-		if($method === 'GET') {
+		if($method === 'GET') 
+		{
+
+			require_once 'application/controllers/get_controller.php';
+			$get_controller = new Get_controller();
+			$error_message = null;
+			$date = null;
 
 			//request 'localhost/api/users'
 			if($request === '/api/users') 
 			{	
-				$date = json_encode($model->get_users());
-				if(empty($date)) 
-				{
-					$message = new Message("Not found users");
-					echo json_encode($message);
-					return;
-				}
-				echo $date;
+				$error_message = "Not found users";
+				$date = $get_controller->get("get_users");
 			} 
+
 			//request 'localhost/api/users/{id}'
 			else if(preg_match('/api\/users\/\d+/', $request))
 			{
 				$id = explode('/', $request)[3];
-				$date = $model->get_user_id($id);
-				if(empty($date)) 
-				{
-					$message = new Message("Not found user with id $id");
-					echo json_encode($message);
-					return;
-				}
-
-				echo json_encode($date);
+				$error_message = "Not found user with id $id";
+				$date = $get_controller->get("get_user_id", $id);
 			} 
+
 			//request 'localhost/api/users/{name}'
 			else if(preg_match('/api\/users\/[a-zA-Z]+/', $request))
 			{
 				$name = explode('/', $request)[3];
-				$date = $model->get_user_name($name);
-
-				if(empty($date)) 
-				{
-					$message = new Message("Not found user with name $name");
-					echo json_encode($message);
-					return;
-				}
-
-				echo json_encode($date);
+				$error_message = "Not found user with name $name";
+				$date = $get_controller->get("get_user_name", $name);
 			}
+
+			if(empty($date)) 
+			{
+				$message = new Message($error_message);
+				echo json_encode($message);
+				return;
+			}
+
+			echo json_encode($date);
 		}
+
 
 		//Request POST
 		else if($method === 'POST') 
 		{
+			require_once 'application/controllers/post_controller.php';
+			$post_controller = new Post_controller();
+
 			//request 'localhost/api/users/add with body name, surname and age'
-			if($request === '/api/user/add') {
+			if($request === '/api/users') 
+			{
 				$name = $_POST['name'];
 				$surname = $_POST['surname'];
 				$age = $_POST['age'];
-				$message = $model->insert_user($name, $surname, $age);
+				$message = $post_controller->post($name, $surname, $age);
 				echo $message;
 			}
+		}
+
+
+		//REQUEST PUT
+		else if($method === 'PUT') 
+		{
+			require_once 'application/controllers/put_controller.php';
+			$put_controller = new Put_controller();
+
+			//request 'localhost/api/users/{id} with body name, surname and age'
+			if(preg_match('/api\/users\/\d+/', $request))
+			{
+				$id = explode('/', $request)[3];
+				parse_str(file_get_contents('php://input'), $_PUT);
+    			$name = $_PUT['name'];
+				$surname = $_PUT['surname'];
+				$age = $_PUT['age'];
+				$message = $put_controller->put($id, $name, $surname, $age);
+				echo $message;		
+    		}
+		}
+
+		else if($method === 'DELETE') 
+		{
+			require_once 'application/controllers/delete_controller.php';
+			$delete_controller = new Delete_controller();
+
+			//request 'localhost/api/users/{id}'
+			if(preg_match('/api\/users\/\d+/', $request))
+			{
+				$id = explode('/', $request)[3];
+				$message = $delete_controller->delete($id);
+				echo $message;		
+    		}
 		}
 	}
 }
